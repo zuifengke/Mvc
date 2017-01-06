@@ -33,16 +33,32 @@ namespace Microsoft.AspNetCore.Mvc.Formatters
             // always return it as a text/plain format.
             if (context.ObjectType == typeof(string) || context.Object is string)
             {
-                if (!context.ContentType.HasValue)
+                if (!context.ContentType.HasValue || IsSupportedMediaType(context.ContentType.Value))
                 {
                     var mediaType = SupportedMediaTypes[0];
                     var encoding = SupportedEncodings[0];
                     context.ContentType = new StringSegment(MediaType.ReplaceEncoding(mediaType, encoding));
+                    return true;
                 }
-
-                return true;
             }
 
+            return false;
+        }
+
+        private bool IsSupportedMediaType(string mediaType)
+        {
+            // Confirm this formatter supports a more specific media type than requested e.g. OK if "text/*"
+            // requested and formatter supports "text/plain". contentType is typically what we got in an Accept
+            // header.
+            var parsedContentType = new MediaType(mediaType);
+            for (var i = 0; i < SupportedMediaTypes.Count; i++)
+            {
+                var supportedMediaType = new MediaType(SupportedMediaTypes[i]);
+                if (supportedMediaType.IsSubsetOf(parsedContentType))
+                {
+                    return true;
+                }
+            }
             return false;
         }
 

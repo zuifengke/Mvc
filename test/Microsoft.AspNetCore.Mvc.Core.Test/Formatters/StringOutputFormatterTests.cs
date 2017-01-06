@@ -27,7 +27,7 @@ namespace Microsoft.AspNetCore.Mvc.Formatters
         }
 
         [Fact]
-        public void CanWriteResult_SetsAcceptContentType()
+        public void CanWriteResult_DoesNotSetContentType_ForNonBrowserMediaTypesOrTextPlain()
         {
             // Arrange
             var formatter = new StringOutputFormatter();
@@ -44,7 +44,7 @@ namespace Microsoft.AspNetCore.Mvc.Formatters
             var result = formatter.CanWriteResult(context);
 
             // Assert
-            Assert.True(result);
+            Assert.False(result);
             Assert.Equal(expectedContentType, context.ContentType);
         }
 
@@ -76,7 +76,7 @@ namespace Microsoft.AspNetCore.Mvc.Formatters
             bool expectedCanWriteResult)
         {
             // Arrange
-            var expectedContentType = new StringSegment("application/json");
+            var expectedContentType = new StringSegment("text/plain");
 
             var formatter = new StringOutputFormatter();
             var type = useDeclaredTypeAsString ? typeof(string) : typeof(object);
@@ -86,7 +86,7 @@ namespace Microsoft.AspNetCore.Mvc.Formatters
                 new TestHttpResponseStreamWriterFactory().CreateWriter,
                 type,
                 value);
-            context.ContentType = expectedContentType;
+            context.ContentType = new StringSegment("text/plain");
 
             // Act
             var result = formatter.CanWriteResult(context);
